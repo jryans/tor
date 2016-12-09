@@ -1,3 +1,0 @@
-  o Minor bugfix (hidden services):
-    - Remove private keys from hidden service descriptor data structure.
-      Fixes bug 20572; bugfix on 18571; not in any released version.
