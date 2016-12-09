@@ -7803,6 +7803,9 @@ getinfo_helper_config(control_connection_t *conn,
         case CONFIG_TYPE_CSV: type = "CommaList"; break;
         case CONFIG_TYPE_CSV_INTERVAL: type = "TimeIntervalCommaList"; break;
         case CONFIG_TYPE_LINELIST: type = "LineList"; break;
+        /* Note that this is incorrectly spelled "Dependant" instead of
+         * "Dependent", which is hard to fix since it's part of the controller
+         * protocol. */
         case CONFIG_TYPE_LINELIST_S: type = "Dependant"; break;
         case CONFIG_TYPE_LINELIST_V: type = "Virtual"; break;
         default:
