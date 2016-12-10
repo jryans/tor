@@ -1178,7 +1178,7 @@ router_should_be_directory_server(const or_options_t *options, int dir_port)
   if (accounting_is_enabled(options) &&
     get_options()->AccountingRule != ACCT_IN) {
     /* Don't spend bytes for directory traffic if we could end up hibernating,
-     * but allow DirPort otherwise. Some people set AccountingMax because
+     * but allow DirPort otherwise. Some relays set AccountingMax because
      * they're confused or to get statistics. Directory traffic has a much
      * larger effect on output than input so there is no reason to turn it
      * off if using AccountingRule in. */
