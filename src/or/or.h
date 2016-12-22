@@ -1764,7 +1764,6 @@ typedef struct dir_connection_t {
   * fingerprints.
   **/
   char *requested_resource;
-  unsigned int dirconn_direct:1; /**< Is this dirconn direct, or via Tor? */
 
   /* Used only for server sides of some dir connections, to implement
    * "spooling" of directory material to the outbuf.  Otherwise, we'd have

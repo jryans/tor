@@ -140,8 +140,6 @@ static void connection_dir_close_consensus_fetches(
  * before deciding that one of us has the wrong time? */
 #define ALLOW_DIRECTORY_TIME_SKEW (30*60)
 
-#define X_ADDRESS_HEADER "X-Your-Address-Is: "
-
 /** HTTP cache control: how long do we tell proxies they can cache each
  * kind of document we serve? */
 #define FULL_DIR_CACHE_LIFETIME (60*60)
@@ -1260,10 +1258,6 @@ directory_initiate_command_rend(const tor_addr_port_t *or_addr_port,
   /* give it an initial state */
   conn->base_.state = DIR_CONN_STATE_CONNECTING;
 
-  /* decide whether we can learn our IP address from this conn */
-  /* XXXX This is a bad name for this field now. */
-  conn->dirconn_direct = !anonymized_connection;
-
   /* copy rendezvous data, if any */
   if (rend_query)
     conn->rend_data = rend_data_dup(rend_query);
@@ -1966,15 +1960,6 @@ connection_dir_client_reached_eof(dir_connection_t *conn)
             conn->base_.address, conn->base_.port, status_code,
             escaped(reason),
             conn->base_.purpose);
-
-  /* now check if it's got any hints for us about our IP address. */
-  if (conn->dirconn_direct) {
-    char *guess = http_get_header(headers, X_ADDRESS_HEADER);
-    if (guess) {
-      router_new_address_suggestion(guess, conn);
-      tor_free(guess);
-    }
-  }
 
   if (date_header > 0) {
     /* The date header was written very soon after we sent our request,
@@ -2694,14 +2679,6 @@ write_http_response_header_impl(dir_connection_t *conn, ssize_t length,
   cp += strlen(tmp);
   if (type) {
     tor_snprintf(cp, sizeof(tmp)-(cp-tmp), "Content-Type: %s\r\n", type);
-    cp += strlen(cp);
-  }
-  if (!is_local_addr(&conn->base_.addr)) {
-    /* Don't report the source address for a nearby/private connection.
-     * Otherwise we tend to mis-report in cases where incoming ports are
-     * being forwarded to a Tor server running behind the firewall. */
-    tor_snprintf(cp, sizeof(tmp)-(cp-tmp),
-                 X_ADDRESS_HEADER "%s\r\n", conn->base_.address);
     cp += strlen(cp);
   }
   if (encoding) {

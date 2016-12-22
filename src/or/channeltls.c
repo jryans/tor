@@ -1724,8 +1724,8 @@ channel_tls_process_netinfo_cell(cell_t *cell, channel_tls_t *chan)
                        "NETINFO cell", "OR");
   }
 
-  /* XXX maybe act on my_apparent_addr, if the source is sufficiently
-   * trustworthy. */
+  /* Possibly change our IP address based on value from remote node */
+  router_new_address_suggestion(&my_apparent_addr, chan->conn);
 
   if (! chan->conn->handshake_state->sent_netinfo) {
     /* If we were prepared to authenticate, but we never got an AUTH_CHALLENGE

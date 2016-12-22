@@ -1,0 +1,5 @@
+  o Minor feature (IP address):
+    - Remove X-Your-Address-Is header from directory responses, as it can leak
+      information to HTTP caches.  Use NETINFO cells from remote nodes to detect
+      changes to the local node's IP address.  Closes ticket 17605.  Patch from
+      jryans.

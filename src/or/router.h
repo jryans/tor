@@ -78,8 +78,8 @@ void mark_my_descriptor_dirty_if_too_old(time_t now);
 void mark_my_descriptor_dirty(const char *reason);
 void check_descriptor_bandwidth_changed(time_t now);
 void check_descriptor_ipaddress_changed(time_t now);
-void router_new_address_suggestion(const char *suggestion,
-                                   const dir_connection_t *d_conn);
+void router_new_address_suggestion(const tor_addr_t *addr_suggestion,
+                                   const or_connection_t *or_conn);
 int router_compare_to_my_exit_policy(const tor_addr_t *addr, uint16_t port);
 MOCK_DECL(int, router_my_exit_policy_is_reject_star,(void));
 MOCK_DECL(const routerinfo_t *, router_get_my_routerinfo, (void));

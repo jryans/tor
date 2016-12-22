@@ -2526,34 +2526,28 @@ check_descriptor_ipaddress_changed(time_t now)
   tor_free(hostname);
 }
 
-/** The most recently guessed value of our IP address, based on directory
- * headers. */
+/** The most recently guessed value of our IP address, based on NETINFO
+ * cells. */
 static tor_addr_t last_guessed_ip = TOR_ADDR_NULL;
 
-/** A directory server <b>d_conn</b> told us our IP address is
- * <b>suggestion</b>.
+/** A remote node in the Tor network that we're talking to via <b>or_conn</b>
+ * told us our IP address is <b>addr_suggestion</b>.
  * If this address is different from the one we think we are now, and
  * if our computer doesn't actually know its IP address, then switch. */
 void
-router_new_address_suggestion(const char *suggestion,
-                              const dir_connection_t *d_conn)
+router_new_address_suggestion(const tor_addr_t *addr_suggestion,
+                              const or_connection_t *or_conn)
 {
-  tor_addr_t addr;
   uint32_t cur = 0;             /* Current IPv4 address.  */
   const or_options_t *options = get_options();
 
-  /* first, learn what the IP address actually is */
-  if (tor_addr_parse(&addr, suggestion) == -1) {
-    log_debug(LD_DIR, "Malformed X-Your-Address-Is header %s. Ignoring.",
-              escaped(suggestion));
-    return;
-  }
-
-  log_debug(LD_DIR, "Got X-Your-Address-Is: %s.", suggestion);
+  log_debug(LD_DIR, "Got IP address suggestion: %s.",
+            fmt_addr(addr_suggestion));
 
   if (!server_mode(options)) {
-    log_debug(LD_DIR, "Running as client, store IP address %s.", suggestion);
-    tor_addr_copy(&last_guessed_ip, &addr);
+    log_debug(LD_DIR, "Running as client, store IP address %s.",
+              fmt_addr(addr_suggestion));
+    tor_addr_copy(&last_guessed_ip, addr_suggestion);
     return;
   }
 
@@ -2567,31 +2561,32 @@ router_new_address_suggestion(const char *suggestion,
     log_debug(LD_DIR, "Running as server, already have IP.");
     return;
   }
-  if (tor_addr_is_internal(&addr, 0)) {
+  if (tor_addr_is_internal(addr_suggestion, 0)) {
     /* Don't believe anybody who says our IP is, say, 127.0.0.1. */
     log_debug(LD_DIR, "Running as server, ignore internal IP.");
     return;
   }
-  if (tor_addr_eq(&d_conn->base_.addr, &addr)) {
+  if (tor_addr_eq(&or_conn->base_.addr, addr_suggestion)) {
     /* Don't believe anybody who says our IP is their IP. */
-    log_debug(LD_DIR, "A directory server told us our IP address is %s, "
+    log_debug(LD_DIR, "A remote node told us our IP address is %s, "
               "but they are just reporting their own IP address. Ignoring.",
-              suggestion);
+              fmt_addr(addr_suggestion));
     return;
   }
 
-  /* Okay.  We can't resolve our own address, and X-Your-Address-Is is giving
+  /* Okay.  We can't resolve our own address, and the NETINFO cell is giving
    * us an answer different from what we had the last time we managed to
    * resolve it. */
-  if (!tor_addr_eq(&last_guessed_ip, &addr)) {
+  if (!tor_addr_eq(&last_guessed_ip, addr_suggestion)) {
+    /* XXX Update control-spec with new method */
     control_event_server_status(LOG_NOTICE,
-                                "EXTERNAL_ADDRESS ADDRESS=%s METHOD=DIRSERV",
-                                suggestion);
-    log_addr_has_changed(LOG_NOTICE, &last_guessed_ip, &addr,
-                         d_conn->base_.address);
+                                "EXTERNAL_ADDRESS ADDRESS=%s METHOD=NETINFO",
+                                fmt_addr(addr_suggestion));
+    log_addr_has_changed(LOG_NOTICE, &last_guessed_ip, addr_suggestion,
+                         or_conn->base_.address);
     ip_address_changed(0);
-    tor_addr_copy(&last_guessed_ip, &addr); /* router_rebuild_descriptor()
-                                               will fetch it */
+    /* router_rebuild_descriptor() will fetch it */
+    tor_addr_copy(&last_guessed_ip, addr_suggestion);
   }
 }
 
