@@ -2552,6 +2552,7 @@ router_new_address_suggestion(const char *suggestion,
   log_debug(LD_DIR, "Got X-Your-Address-Is: %s.", suggestion);
 
   if (!server_mode(options)) {
+    log_debug(LD_DIR, "Running as client, store IP address %s.", suggestion);
     tor_addr_copy(&last_guessed_ip, &addr);
     return;
   }
@@ -2563,10 +2564,12 @@ router_new_address_suggestion(const char *suggestion,
     /* We're all set -- we already know our address. Great. */
     tor_addr_from_ipv4h(&last_guessed_ip, cur); /* store it in case we
                                                    need it later */
+    log_debug(LD_DIR, "Running as server, already have IP.");
     return;
   }
   if (tor_addr_is_internal(&addr, 0)) {
     /* Don't believe anybody who says our IP is, say, 127.0.0.1. */
+    log_debug(LD_DIR, "Running as server, ignore internal IP.");
     return;
   }
   if (tor_addr_eq(&d_conn->base_.addr, &addr)) {
